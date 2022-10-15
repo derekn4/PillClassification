@@ -6,7 +6,6 @@ import urllib.request
 
 def folder_create(images, url):
     folder_name = "images"
-    os.mkdir(folder_name)
     download_images(images, url, folder_name)
 
 def download_images(images,url, folder_name): #, folder_name):
@@ -64,5 +63,6 @@ for l in range(len(links)):
 
 # for l in links:
 #     print(l)
-
+folder_name = "images"
+os.mkdir(folder_name)
 main(links[:5])
