@@ -5,7 +5,7 @@ import os
 import urllib.request
 
 def folder_create(images, url):
-    folder_name = input("Enter name of folder: ")
+    folder_name = "images"
     os.mkdir(folder_name)
     download_images(images, url, folder_name)
 
@@ -19,6 +19,11 @@ def download_images(images,url, folder_name): #, folder_name):
             with open(f"{folder_name}/{image}", "wb+") as f:
                 f.write(r)
                 count+=1
+            
+            #keeping track of image downloads
+            if count%100 == 0:
+                print(f"{count} images downloaded from {url}")
+
         if count == len(images):
             print("All the images have been downloaded!")
         else:
