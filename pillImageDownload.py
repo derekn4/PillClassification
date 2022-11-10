@@ -100,4 +100,4 @@ for l in range(len(links)):
 #print(links[10:15])
 #print(links[15:20])
 print("Starting Image Downloading:", curr)
-main(links[15:20])
+main(links[25:30])
