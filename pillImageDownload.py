@@ -75,7 +75,15 @@ for link in soup.find_all("a"):
         links.append(link.get("href"))
 
 #Test Code
-curr = [l.strip('/index.html') for l in links[5:10]]
+curr = [l.strip('/index.html') for l in links[10:15]]
+count = 0
+for c in curr:
+    print(c)
+    count+=1
+    if count==5:
+        print()
+
+curr = [l.strip('/index.html') for l in links[15:20]]
 count = 0
 for c in curr:
     print(c)
@@ -89,6 +97,7 @@ for l in range(len(links)):
         links[l] = links[l][:-11]
         links[l] = "https://data.lhncbc.nlm.nih.gov/public/Pills/" + links[l] + "/images/index.html"
 
-
+#print(links[10:15])
+#print(links[15:20])
 print("Starting Image Downloading:", curr)
-main(links[5:10])
+main(links[15:20])
