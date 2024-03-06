@@ -58,14 +58,14 @@
       </ul>
     </li>
     <li>
-      <a href="#trltoxic-code-how-it-works">trltoxic Code: How it works</a>
+      <a href="#vision-transformer">Vision Transformer</a>
       <ul>
-        <li><a href="#trl-args">Script Arguments and Configuration</a></li>
-        <li><a href="#trl-dataset">Dataset Building</a></li>
-        <li><a href="#trl-init">Model Initialization</a></li>
-        <li><a href="#ppo-init">PPO Trainer Initialization</a></li>
-        <li><a href="#reward">Reward Pipeline Setup</a></li>
-        <li><a href="#ppo-train">PPO Training Loop and Model saving</a></li>
+        <li><a href="#initialization">Initialization</a></li>
+        <li><a href="#dataset-building">Dataset Building</a></li>
+        <li><a href="#validation-function">Validation Function</a></li>
+        <li><a href="#fit-function">Fit Function</a></li>
+        <li><a href="#early-stopping">Early Stopping</a></li>
+        <li><a href="#training-loop">Training Loop</a></li>
       </ul>
     </li>
     <li><a href="#contact">Contact</a></li>
@@ -126,97 +126,80 @@ The model performance evaluation metric focused on the most toxic drugs, using L
 - Add image paths to .csv file with ld50 values obtained from the toxicity .csv file
 - Since images had to be collected in subsets, multiple folders were created
   - in order to accurately access during training, the column "Part" was added to help identify which folder the image would be found
- 
-
-### Args Class
-- After importing the Transformers Library and various Pytorch imports, the Args() class is initialized
-  - This class defines a set of parameters for configuring the training process.
-  - Parameters include: 
-    - paths to model, tokenizer, and output directories
-    - batch sizes
-    - learning rates
-    - gradient accumulation steps
-    - number of epochs
-    - and various other training hyperparameters.
-
-
-### Construct Conversations Function
-- "construct_conv" function: 
-  - This function takes a conversation row, a tokenizer, and an optional argument eos (end-of-sentence)
-  - Encodes each utterance in the conversation using the tokenizer and appends an end-of-sentence token if "eos" is True.
-  - Conversation is flattened into a single list of token IDs
-  - Function returns the flattened list of token IDs representing the conversation.
-
-### ConversationDataset Class
-- This class inherits from "Dataset", which is a PyTorch class for representing datasets in PyTorch.
-- The "init" method initializes the dataset.
-  - Takes parameters including a tokenizer, args (training arguments), df (Dataframe containing conversation data), and an optional "block_size" (sets the maximum length of the sequence)
-  - Checks if cached features exist and loads them if overwrite_cache parameter is set to False
-    - Otherwise, it creates features from the dataset and saves them.
-  - Constructs examples from the dataset by iterating over each row in the DataFrame.
-  - Encodes the conversation using the "construct_conv" function and adds it to the examples list if its length is less than block_size.
-
-  - __len__ method returns the total number of examples in the dataset.
-  - __getitem__ method retrieves an item from the dataset. It returns a PyTorch tensor containing the token IDs of the conversation at index item.
-
-### Train Function
-- This function is responsible for training the model.
-- Initializes a TensorBoard writer for logging
-- Sets up training batch size and collation function for the DataLoader
-- Calculates total number of optimization steps based on the number of training examples, gradient accumulation steps, and number of epochs.
-- Initializes optimizer and scheduler for learning rate scheduling
-  - loads optimizer and scheduler states if they already exist
-- Initializes mixed precision training if "args.fp16" is enabled.
-- Sets up multi-GPU and distributed training if multiple GPUs are available.
-- Iterates through epochs and batches, calculates loss, performs backpropagation, and updates model parameters.
-- Logs training progress, evaluates the model periodically, and saves checkpoints.
-- Manages the maximum number of steps for training.
-- Closes the TensorBoard writer.
-
-### Evalute Function
-- This function evaluates the model performance on a validation dataset.
-- Sets up the evaluation batch size and collation function for the DataLoader.
-- Initializes a DataLoader for the evaluation dataset.
-- Performs evaluation by iterating through batches, calculating loss, and accumulating evaluation metrics.
-- Computes the perplexity metric based on the evaluation loss.
-- Logs evaluation results and writes them to an output file.
-- Returns the evaluation results as a dictionary.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-## trltoxic Code: How it works
-This script performs fine-tuning of a language model using the Proximal Policy Optimization (PPO) algorithm to generate less toxic text.
-Hence, "trl" for Transformer Reinforcement Learning.
+## Vision Transformer
+Early on in the development of our model, we tried various other ML models for Vision Classification. 
+Most of these typical methods, including Convolution Neural Networks (CNNs), did not output great results.
+Furthermore, they required too many parameters and even more training time that we did not have access to in order to potentially get any improvements.
 
-Below are some key steps and components of the script:
+Fortunately, the Vision Transformer was developed soon after the Transformer model.
+The idea behind Vision Transformers is to treat images as sequences of patches, which are then processed by a transformer model. 
+This approach showed promising results, demonstrating competitive performance compared to traditional CNNs on various image classification benchmarks.
 
-### Script Arguments and Configuration
-- The script uses dataclass to define script arguments such as the model name, learning rate, mini-batch size, etc.
-- It uses HfArgumentParser to parse the arguments and configure the PPO training.
+### Initialization
+- The "ViTForImageClassification.from_pretrained" method comes from the Hugging Face Transformers library
+- It loads "google/vit-base-patch16-224", a base version of the ViT model trained on ImageNet
+- "num_labels" is set to 230 because our dataset contained 230 unique pharmaceutical drugs
+- The "id2label" and "label2id" dictionaries are used to map class indices to labels and vice versa
+- The "ignore_mismatched_sizes" parameter is set to True to handle images with different sizes during training.
+
+- Optimizer Initialization: The AdamW optimizer is used for training the model. It's initialized with the model's parameters and the specified learning rate (lr).
+
+- Training Configuration: Several hyperparameters are defined for training:
+  - num_epochs: The number of training epochs (set to 10).
+  - eval_steps: Number of steps after which to perform evaluation during training.
+  - record_steps: Number of steps after which to record training statistics.
+  - save_checkpoint: Number of epochs after which to save model checkpoints.
+
+- Loss Function Initialization: The nn.CrossEntropyLoss() function is used to define the loss criterion for multi-class classification. 
+
 
 ### Dataset Building
-- The build_dataset function is defined to prepare the dataset for training. 
-- It loads the data from a CSV file, tokenizes it, filters out short samples, and splits it into training and validation sets.
+- Define a custom dataset class NaturalImageDataset for handling image data
+- "init" function initializes the dataset object with:
+  - the provided paths to images (path) and their corresponding labels (labels)
+  - optional argument "tfms" which determines whether data augmentation should be applied during training (tfms=1) or validation/testing (tfms=0).
 
-### Model Initialization
-- The script loads a pretrained language model for causal language modeling (LM). 
-- It then creates a value head for the LM using AutoModelForCausalLMWithValueHead.
+### Validation Function
+- This function evaluates the model on a validation dataset (test_dataloader).
+- It sets the model to evaluation mode (model.eval()) to disable dropout and batch normalization.
+- For each batch in the validation dataset, it computes the loss and accuracy.
+- The loss and accuracy metrics are then averaged over all batches and returned.
 
-### PPO Trainer Initialization
-- It initializes a PPOTrainer object, which orchestrates the PPO training process. 
-- This includes setting up the model, reference model, tokenizer, optimizer, and dataset.
+### Fit Function
+- This function trains the model using a training dataset (train_dataloader).
+- It sets the model to training mode (model.train()).
+- For each batch in the training dataset, it performs the forward pass, computes the loss, and updates the model's weights using backpropagation.
+- It computes and returns the average training loss and accuracy.
 
-### Reward Pipeline Setup
-- The script loads a toxicity detection model (RoBERTa) and tokenizer. 
-- It defines the generation arguments and output length sampler.
+### Early Stopping
+- This class implements early stopping based on the change in validation loss.
+- It tracks the number of consecutive times the validation loss exceeds the training loss by a certain minimum delta (min_delta).
+- If the tolerance threshold (tolerance) is reached, indicating that the validation loss consistently exceeds the training loss, it sets the early_stop flag to True, indicating that training should be stopped early.
 
-### PPO Training Loop and Model saving
-- Inside the training loop, it iterates over the dataset and generates responses using the policy model.
-- Sentiment scores (toxicity labels) are computed for the generated responses using the toxicity model.
-- PPO steps are performed to optimize the policy based on the generated responses and rewards.
-- Training statistics are logged, and the model is periodically saved during training.
-- After training, the script saves the trained PPO model.
+### Training Loop
+- A "StratifiedKFold" cross-validation loop is used to split the dataset into train and test sets for each fold
+  - Within each fold, the model is trained and validated
+  - various performance metrics are computed and stored for evaluation
+    - precision
+    - recall
+    - F1-score
+    - Matthews correlation coefficient (MCC)
+
+- Steps inside the loop:
+  - Data Splitting: The dataset is split into training and testing sets using StratifiedKFold.
+  - Model Training and Validation: For each fold, the model is trained and validated for a maximum of 10 epochs. 
+    - The "fit" function trains the model using the training data, while the validate function evaluates the model on the validation data.
+  - Early Stopping: Early stopping is applied to prevent overfitting. 
+    - If the validation loss decreases, the model's state is saved. 
+    - If the validation loss does not improve for a certain number of epochs (as determined by the EarlyStopping class), training is stopped early
+  - Performance Evaluation: 
+    - After training and validation, various performance metrics (precision, recall, F1-score, MCC) are computed using the predicted labels (y_pred) and true labels (y_test) 
+    - These metrics are then stored for each fold.
+  - Visualization: Accuracy and loss plots are generated to visualize the model's performance during training and validation for each fold.
 
 
 <!-- CONTACT -->
