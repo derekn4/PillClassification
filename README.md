@@ -51,14 +51,10 @@
       </ul>
     </li>
     <li>
-      <a href="#dialogpt-code-how-it-works">DioloGPT Code: How it works</a>
+      <a href="#data-collection-and-preprocessing">Data Collection and Preprocessing</a>
       <ul>
-        <li><a href="#data-processing">Data Processing</a></li>
-        <li><a href="#args-class">Args Class</a></li>
-        <li><a href="#conv-funct">Construct Conversations Function</a></li>
-        <li><a href="#conv-class">ConversationDataset Class</a></li>
-        <li><a href="#train">Train Function</a></li>
-        <li><a href="#evalute">Evaluate Function</a></li>
+        <li><a href="#subset-reason">Data Collection</a></li>
+        <li><a href="#data-processing">Data Preprocessing</a></li>
       </ul>
     </li>
     <li>
@@ -80,24 +76,12 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
+As modern health research continues to produce more complex pharmacological treatments, the public receives an ever-growing list of prospective tablets that can aid in treating various ailments and symptoms. While there are several benefits to these medical advancements, it is critical to realize the hazards associated with medications and their chemical combinations, one of them being the risk of medication errors by patients.
 
-Dataset Curation using Few-shot learning for Empathetic Conversational Agents.
-In this project, we aimed to build a conversational agent for mental health applications that is more “human-like” in its  approach and has the following characteristics:
-- Is empathetic 
-- Has a sense of morality 
-- Is self-aware (Knows when to not respond)
-- Doesn’t generate triggering responses
-
-Specifically, we graded the final model on these categories through Human Evaluations:
-- Natural Flow
-- Context Dependence
-- Topic Consistency
-- Speaker Consistency
-- Specificity
-- Interestingness
-
-Our primary objective is to develop an empathetic conversational agent that is specifically tailored for self-care and emotional support settings.
-
+This project aims to employ Vision Transformers, a deep learning model, to identify pharmaceutical pills.
+It employs fast data-preprocessing, data-augmentation techniques, and attention mechanisms to reliably recognize the kind of medicine given a picture of a pill.
+The model performance evaluation metric focused on the most toxic drugs, using LD50 values.
+  - LD50 value: LD50 is the amount of a material, given all at once, which causes the death of 50% (one half) of a group of test animals.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -120,17 +104,29 @@ Our primary objective is to develop an empathetic conversational agent that is s
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-## DioloGPT Code: How it works
-- Install all necessary libraries to run DialoGPT.ipynb
+## Data Collection and Preprocessing
+- Install all necessary libraries to run pillImageDownload.py
+- NOTE: the  National Library of Medicine consisted of 4,000 high-quality reference pills and 133,000 pictures captured by digital cameras on mobile phones.
+  - ~2-3TB of data which we could not store or processes in GoogleColab
+
+### Data Collection
+- Makes requests from "https://data.lhncbc.nlm.nih.gov/public/Pills/index.html"
+- Can only process 10 folders at a time before ConnectionTimeout (~5000 images)
+- Searched for only .jpg images (usually smaller size) and calls download function
+- Loops through the number of download links in the folder (ending with .jpg)
+  - downloads each image and writes to a folder
+
+- In ToxicityExctraction.ipynb, we use the official drug names to search for LD50 values on the "go.drugbank.com"
+- We store the values in a CSV file to eventually add to our final dataset
+- NOTE: Any drug that was unable to be collected from go.drugbank.com, manual searching would be done.
+
 
 ### Data Processing
-- Dataset is pulled from local storage "FB_Multi_Train.csv"
-- Preprocessing of Data required:
- - Tokenization
- - End-of-Sentence Token addition
- - Flattening Conversations
- - Padding
- - Caching Features
+- CSV Column Names: NDC11, Part, Image, Layout, Name, rat toxicity
+- Add image paths to .csv file with ld50 values obtained from the toxicity .csv file
+- Since images had to be collected in subsets, multiple folders were created
+  - in order to accurately access during training, the column "Part" was added to help identify which folder the image would be found
+ 
 
 ### Args Class
 - After importing the Transformers Library and various Pytorch imports, the Args() class is initialized
