@@ -146,7 +146,7 @@ This approach showed promising results, demonstrating competitive performance co
 - The "id2label" and "label2id" dictionaries are used to map class indices to labels and vice versa
 - The "ignore_mismatched_sizes" parameter is set to True to handle images with different sizes during training.
 
-- Optimizer Initialization: The AdamW optimizer is used for training the model. It's initialized with the model's parameters and the specified learning rate (lr).
+- Optimizer Initialization: The **AdamW optimizer** is used for training the model
 
 - Training Configuration: Several hyperparameters are defined for training:
   - num_epochs: The number of training epochs (set to 10).
@@ -177,11 +177,11 @@ This approach showed promising results, demonstrating competitive performance co
 
 ### Early Stopping
 - This class implements early stopping based on the change in validation loss.
-- It tracks the number of consecutive times the validation loss exceeds the training loss by a certain minimum delta (min_delta).
+- It tracks the number of consecutive times the validation loss **exceeds** the training loss by a certain minimum delta (min_delta).
 - If the tolerance threshold (tolerance) is reached, indicating that the validation loss consistently exceeds the training loss, it sets the early_stop flag to True, indicating that training should be stopped early.
 
 ### Training Loop
-- A "StratifiedKFold" cross-validation loop is used to split the dataset into train and test sets for each fold
+- A **"StratifiedKFold"** cross-validation loop is used to split the dataset into train and test sets for each fold
   - Within each fold, the model is trained and validated
   - various performance metrics are computed and stored for evaluation
     - precision
@@ -189,17 +189,17 @@ This approach showed promising results, demonstrating competitive performance co
     - F1-score
     - Matthews correlation coefficient (MCC)
 
-- Steps inside the loop:
-  - \textbf{Data Splitting}: The dataset is split into training and testing sets using StratifiedKFold.
-  - Model Training and Validation: For each fold, the model is trained and validated for a maximum of 10 epochs. 
+- **Steps inside the loop**:
+  - **Data Splitting**: The dataset is split into training and testing sets using StratifiedKFold.
+  - **Model Training and Validation**: For each fold, the model is trained and validated for a maximum of 10 epochs. 
     - The "fit" function trains the model using the training data, while the validate function evaluates the model on the validation data.
-  - Early Stopping: Early stopping is applied to prevent overfitting. 
+  - **Early Stopping**: Early stopping is applied to prevent overfitting. 
     - If the validation loss decreases, the model's state is saved. 
     - If the validation loss does not improve for a certain number of epochs (as determined by the EarlyStopping class), training is stopped early
-  - Performance Evaluation: 
+  - **Performance Evaluation**: 
     - After training and validation, various performance metrics (precision, recall, F1-score, MCC) are computed using the predicted labels (y_pred) and true labels (y_test) 
     - These metrics are then stored for each fold.
-  - Visualization: Accuracy and loss plots are generated to visualize the model's performance during training and validation for each fold.
+  - **Visualization**: Accuracy and loss plots are generated to visualize the model's performance during training and validation for each fold.
 
 
 <!-- CONTACT -->
