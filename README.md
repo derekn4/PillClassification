@@ -190,7 +190,7 @@ This approach showed promising results, demonstrating competitive performance co
     - Matthews correlation coefficient (MCC)
 
 - Steps inside the loop:
-  - Data Splitting: The dataset is split into training and testing sets using StratifiedKFold.
+  - \textbf{Data Splitting}: The dataset is split into training and testing sets using StratifiedKFold.
   - Model Training and Validation: For each fold, the model is trained and validated for a maximum of 10 epochs. 
     - The "fit" function trains the model using the training data, while the validate function evaluates the model on the validation data.
   - Early Stopping: Early stopping is applied to prevent overfitting. 
